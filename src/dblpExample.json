@@ -13,7 +13,7 @@
     "venue" : {
       "_id" : "55f9705fc35f4fb0d21cf4ea",
       "type" : NumberInt(1),
-      "raw" : "Cognitive Neuroscience, Journal of ",
+      "raw" : "Cognitive Neuroscience, Journal of  ",
       "raw_zh" : ""
     },
     "year" : NumberInt(2014),

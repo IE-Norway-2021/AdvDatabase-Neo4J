@@ -1,1 +1,5 @@
 db.json
+neo4j_mount/data
+neo4j_mount/logs
+__pycache__
+dblpExampleCleaned2.json

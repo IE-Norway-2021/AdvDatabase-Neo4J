@@ -1,5 +1,5 @@
-FROM maven:latest
+FROM python:3.9.16-bullseye
 COPY src/ src
-COPY pom.xml .
-RUN mvn compile
-CMD ["mvn", "exec:java"]
+RUN pip install -r src/requirements.txt
+run python3 src/clean.py
+CMD ["python3", "src/main.py"]
