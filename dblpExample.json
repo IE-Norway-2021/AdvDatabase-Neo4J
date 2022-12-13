@@ -1,7 +1,7 @@
 [
   {
     "_id" : "53e99809b7602d970201fa36",
-    "title" : "\\\"charlie's lab\\\"",
+    "title" : "charlie's lab",
     "authors" : [
       {
         "_id" : "53f4670cdabfaeb22f540094",
@@ -12,11 +12,11 @@
     ],
     "venue" : {
       "_id" : "55f9705fc35f4fb0d21cf4ea",
-      "type" : NumberInt(1),
+      "type" : 1,
       "raw" : "Cognitive Neuroscience, Journal of ",
       "raw_zh" : ""
     },
-    "year" : NumberInt(2014),
+    "year" : 2014,
     "keywords" : [
 
     ],
@@ -24,7 +24,7 @@
       "Psychology",
       "Art history"
     ],
-    "n_citation" : NumberInt(0),
+    "n_citation" : 0,
     "page_start" : "1195",
     "page_end" : "1195",
     "lang" : "en",
@@ -43,7 +43,7 @@
   },
   {
     "_id" : "53e99785b7602d9701f405f5",
-    "title" : "\"Genes\".",
+    "title" : "Genes.",
     "authors" : [
       {
         "_id" : "54057888dabfae91d3fe730e",
@@ -63,9 +63,9 @@
       "raw" : "Theory in Biosciences",
       "raw_zh" : null,
       "publisher" : null,
-      "type" : NumberInt(0)
+      "type" : 0
     },
-    "year" : NumberInt(2008),
+    "year" : 2008,
     "keywords" : [
       "Functional Unit",
       "Functional Product",
@@ -73,7 +73,7 @@
       "Heritable Material",
       "Genetic Encode"
     ],
-    "n_citation" : NumberInt(5),
+    "n_citation" : 5,
     "page_start" : "215",
     "page_end" : "221",
     "lang" : "en",
@@ -94,13 +94,13 @@
     "_id" : "53e99784b7602d9701f3e3f5",
     "title" : "3GIO.",
     "venue" : {
-      "type" : NumberInt(0)
+      "type" : 0
     },
-    "year" : NumberInt(2011),
+    "year" : 2011,
     "keywords" : [
 
     ],
-    "n_citation" : NumberInt(0),
+    "n_citation" : 0,
     "lang" : "en"
   },
   {
@@ -131,10 +131,10 @@
     "venue" : {
       "_id" : "53a7297d20f7420be8bd4ae7",
       "name_d" : "International Geoscience and Remote Sensing Symposium",
-      "type" : NumberInt(0),
+      "type" : 0,
       "raw" : "IGARSS"
     },
-    "year" : NumberInt(2011),
+    "year" : 2011,
     "keywords" : [
       "canopy parameters",
       "canopy spectrum",
@@ -167,7 +167,7 @@
       "Soil water",
       "Canopy"
     ],
-    "n_citation" : NumberInt(0),
+    "n_citation" : 0,
     "page_start" : "1930",
     "page_end" : "1933",
     "lang" : "en",
