@@ -3,9 +3,8 @@ import os
 
 
 def cleanString(jsonFile, destFile, maxNodes):
-    print("Cleaning the json file...")
     # clean the string. Open the file as needed since it is too big to load into memory
-    one_line_before, two_lines_before = '', ''
+    one_line_before, two_lines_before, three_lines_before = '', '', ''
     numberOfNodesRead = 0
     with open(jsonFile, 'r', encoding='utf-8') as f:
         with open(destFile, 'w', encoding='utf-8') as f2:
@@ -17,7 +16,7 @@ def cleanString(jsonFile, destFile, maxNodes):
                 if (']' in line and i == length - 1):
                     # last one, we do nothing
                     pass
-                elif ('_id' in line and '{' in one_line_before and '},' in two_lines_before):
+                elif ('title' in line and '_id' in one_line_before and '{' in two_lines_before and '},' in three_lines_before):
                     numberOfNodesRead += 1
                     if (numberOfNodesRead == maxNodes):
                         # write the end of the json file
@@ -32,15 +31,16 @@ def cleanString(jsonFile, destFile, maxNodes):
                 line = line.replace('\\', '')
                 # escape all the ' in the string
                 line = line.replace("'", "\\\\'")
-                f2.write(two_lines_before)
+                f2.write(three_lines_before)
                 
+                three_lines_before = two_lines_before
                 two_lines_before = one_line_before
                 one_line_before = line
                 # Show the progress
-                if (i % 100000 == 0):
-                    print('\r', end='')
-                    print(f'Loading {round(i/length*100, 2)}%', end='')
-                i +=1
-            print('\r', end='')
+                # if (i % 100000 == 0):
+                #     print('\r', end='')
+                #     print(f'Loading {round(i/length*100, 2)}%', end='')
+                #i +=1
+            #print('\r', end='')
     print("Done cleaning the json file")
 

@@ -3,27 +3,27 @@ import time
 import re
 import json
 from py2neo import Graph, Node, Relationship
+from py2neo.bulk import create_nodes, create_relationships
 from classes import Author, Article
 from clean import cleanString
 import ijson
 import logging
+from itertools import islice
 
 
-# JSON_FILE = os.environ['JSON_FILE']
-# CLEANED_FILE = os.environ['CLEANED_FILE']
-# MAX_NODES = os.environ['MAX_NODES']
-# NEO4J_IP = os.environ['NEO4J_IP']
-JSON_FILE = "db.json"
-CLEANED_FILE = "dblpExampleCleanedTest.json"
-MAX_NODES = 100
-NEO4J_IP = "localhost"
+JSON_FILE = os.environ['JSON_FILE']
+CLEANED_FILE = os.environ['CLEANED_FILE']
+MAX_NODES = os.environ['MAX_NODES']
+NEO4J_IP = os.environ['NEO4J_IP']
+# JSON_FILE = "db.json"
+# CLEANED_FILE = "dblpExampleCleanedTest.json"
+# MAX_NODES = 10000
+# NEO4J_IP = "localhost"
 # create a logger to the console
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def preprocessJson(jsonFile):
-    # use logger instead of print
-    print("Preprocessing the json file...")
     # preprocess the json file to get the nodes and the relationships. Split the json file in two arrays one for the authors and one for the papers
     authors: list[Author] = []
     articles: list[Article] = []
@@ -40,8 +40,10 @@ def preprocessJson(jsonFile):
                     _id, name = "", ""
                     if ("_id" in tmp[j]):
                         _id = tmp[j]["_id"]
-                        if (_id == "" or _id == " "):
+                        if (_id == '' or _id == ""):
                             continue
+                    else:
+                        continue
                     if ("name" in tmp[j]):
                         name = tmp[j]["name"]
                     author = Author(_id, name)
@@ -75,61 +77,74 @@ def preprocessJson(jsonFile):
 
 
 
-
 def writeInDb(authors, articles, graph):
     # First create the nodes, then create the relationships
-    # create all the authors nodes and add them to the graph. Use only one cypher query to add all the nodes
-    print("Creating authors nodes...")
-    authorsCypher = "CREATE "
+    # create all the authors nodes and add them to the graph. 
+    print("Creating authors nodes data")
+    keys_authors = ['_id', 'name']
+    data_authors = []
+    # create the data array for the authors
     for i in range(len(authors)):
-        authorsCypher += f"(a{i}:Author {{name: '{authors[i].name}', _id: '{authors[i]._id}'}})"
-        if (i != len(authors) - 1):
-            authorsCypher += ", "
+        data_authors.append([authors[i]._id, authors[i].name])
         if (i % 1000 == 0):
             print('\r', end='')
             print(f'Loading {round(i/len(authors)*100, 2)}%', end='')
     print('')
-    authorsCypher += ";"
-    graph.run(authorsCypher)
-    # Get the number of Author nodes in the graph, and compare it to the number of authors in the json file
-    print("Number of authors in the graph: ", graph.run("MATCH (a:Author) RETURN count(a) as count;").data()[0]["count"])
-    print("Number of authors in the json file: ", len(authors))
-    # create all the articles nodes and add them to the graph. Use only one cypher query to add all the nodes
-    print("Creating articles nodes...")
-    articlesCypher = "CREATE "
+    print("Creating authors nodes in DB")
+    create_nodes(graph, data_authors,  labels={'Author'}, keys=keys_authors)
+    
+    # create the articles nodes and add them to the graph
+    print("Creating articles nodes data")
+    keys_articles = ['_id', 'title']
+    data_articles = []
+    # create the data array for the articles
     for i in range(len(articles)):
-        articlesCypher += f"(a{i}:Article {{title: '{articles[i].title}', _id: '{articles[i]._id}'}})"
-        if (i != len(articles) - 1):
-            articlesCypher += ", "
+        data_articles.append([articles[i]._id, articles[i].title])
         if (i % 1000 == 0):
             print('\r', end='')
             print(f'Loading {round(i/len(articles)*100, 2)}%', end='')
     print('')
-    articlesCypher += ";"
-    graph.run(articlesCypher)
-    # Get the number of Article nodes in the graph, and compare it to the number of articles in the json file
-    print("Number of articles in the graph: ", graph.run("MATCH (a:Article) RETURN count(a) as count;").data()[0]["count"])
-    print("Number of articles in the json file: ", len(articles))
+    print("Creating articles nodes in DB")
+    create_nodes(graph, data_articles,  labels={'Article'}, keys=keys_articles)
 
-    # create all the relationships between the articles and the authors. TODO optimise this
-    print("Creating relationship AUTHORED...") 
+    # create the relationships between the articles and the authored : AUTHORED
+    print("Creating relationship AUTHORED...")
+    start_node_key_authored = ("Author", "_id")
+    end_node_key_authored = ("Article", "_id")
+    data_authored = []
+
     for i in range(len(articles)):
         for j in range(len(articles[i].authors)):
-            print("Author : " + articles[i].authors[j] + ", Article : " + articles[i]._id)
-            graph.run(f"MATCH (a:Article {{_id: '{articles[i]._id}'}}), (b:Author {{_id: '{articles[i].authors[j]}'}}) CREATE (b)-[:AUTHORED]->(a);")
+            data_authored.append((articles[i].authors[j], {}, articles[i]._id))
         if (i % 1000 == 0):
             print('\r', end='')
             print(f'Loading {round(i/len(articles)*100, 2)}%', end='')
+    
     print('')
-    # create all the relationships between the articles and the references TODO optimise this, and take into account the fact that some references are not in the database yet
+    print("Creating relationship AUTHORED in DB")
+    stream = iter(data_authored)
+    batch_size = (int)(MAX_NODES/10)
+    while True:
+        batch = islice(stream, batch_size)
+        if batch:
+            create_relationships(graph, batch, "AUTHORED", start_node_key=start_node_key_authored, end_node_key=end_node_key_authored)
+        else:
+            break
+
+    # create all the relationships between the articles and the references 
     print("Creating relationship CITES...")
+    start_node_key_cites = ("Article", "_id")
+    end_node_key_cites = ("Article", "_id")
+    data_cites = []
     for i in range(len(articles)):
         for j in range(len(articles[i].references)):
-            graph.run(f"MATCH (a:Article {{_id: '{articles[i]._id}'}}), (b:Article {{_id: '{articles[i].references[j]}'}}) CREATE (a)-[:CITES]->(b);")
+            data_cites.append((articles[i]._id, {}, articles[i].references[j]))
         if (i % 1000 == 0):
             print('\r', end='')
             print(f'Loading {round(i/len(articles)*100, 2)}%', end='')
     print('')
+    print("Creating relationship CITES in DB")
+    create_relationships(graph, data_cites, "CITES", start_node_key=start_node_key_cites, end_node_key=end_node_key_cites)
 
         
     
@@ -142,12 +157,19 @@ def main():
     # connect to the graph
     print("Connecting to the graph...")
     graph = Graph(name="neo4j", password="test", host=NEO4J_IP)
+    graph.run("MATCH (n) DETACH DELETE n")
     # preprocess the json file
     print("Preprocessing the json file...")
     authors, articles = preprocessJson(CLEANED_FILE)
     # write the nodes and the relationships in the graph
     print("Writing in the graph...")
     writeInDb(authors, articles, graph)
+    print("Number of authors in the graph: ", graph.run("MATCH (a:Author) RETURN count(a) as count;").data()[0]["count"])
+    print("Number of authors in the json file: ", len(authors))
+    print("Number of articles in the graph: ", graph.run("MATCH (a:Article) RETURN count(a) as count;").data()[0]["count"])
+    print("Number of articles in the json file: ", len(articles))
+    print("Number of authored in the graph: ", graph.run("MATCH (a:Author)-[r:AUTHORED]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
+    print("Number of cites in the graph: ", graph.run("MATCH (a:Article)-[r:CITES]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
     
 
 if __name__ == '__main__':  
@@ -162,32 +184,13 @@ if __name__ == '__main__':
     # print(len(articles))
     
     # sleep for 10 seconds to wait for neo4j to start
-    # print("Waiting for neo4j to start, sleeping for 15 sec...")
-    # time.sleep(15)
-    # main()
-    authors, articles = preprocessJson(CLEANED_FILE)
-    # check if there are authors with the same _id
-    # print(len(authors))
-    # print(len(articles))
-    # # print the number of AUTHORED relationships
-    # nbAuthored = 0
-    # for i in range(len(articles)):
-    #     for j in range(len(articles[i].authors)):
-    #         for k in range(len(authors)):
-    #             if (articles[i].authors[j]._id == authors[k]._id):
-    #                 nbAuthored += 1
-    # print(nbAuthored)
-    # # print the number of CITES relationships
-    # nbCites = 0
-    # for i in range(len(articles)):
-    #     for j in range(len(articles[i].references)):
-    #         # check that the reference is in the articles list
-    #         for k in range(len(articles)):
-    #             if (articles[i].references[j] == articles[k]._id):
-    #                 nbCites += 1
-    # print(nbCites)
-    graph = Graph(name="neo4j", password="test", host="localhost")
-    # clean all
-    graph.run("MATCH (n) DETACH DELETE n")
-    writeInDb(authors, articles, graph)
-    print("Done")
+    print("Waiting for neo4j to start, sleeping for 15 sec...")
+    time.sleep(15)
+    main()
+    # authors, articles = preprocessJson(CLEANED_FILE)
+    # # print authors with no id
+    # graph = Graph(name="neo4j", password="test", host="localhost")
+    # # clean all
+    # writeInDb(authors, articles, graph)
+    # print("Done")
+    
