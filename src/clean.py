@@ -8,12 +8,8 @@ def cleanString(jsonFile, destFile, maxNodes):
     numberOfNodesRead = 0
     with open(jsonFile, 'r', encoding='utf-8') as f:
         with open(destFile, 'w', encoding='utf-8') as f2:
-            #length = f.seek(0, os.SEEK_END)
-            # reset the file pointer to the beginning of the file
-            #f.seek(0, os.SEEK_SET)
-            #i = 0
             for line in f:
-                if (']' in line):# and i == length - 1):
+                if (']' in line):
                     # last one, we do nothing
                     pass
                 elif ('title' in line and '_id' in one_line_before and '{' in two_lines_before and '},' in three_lines_before):
@@ -36,12 +32,6 @@ def cleanString(jsonFile, destFile, maxNodes):
                 three_lines_before = two_lines_before
                 two_lines_before = one_line_before
                 one_line_before = line
-                # Show the progress
-                # if (i % 100000 == 0):
-                #     print('\r', end='')
-                #     print(f'Loading {round(i/length*100, 2)}%', end='')
-                #i +=1
-            #print('\r', end='')
             f2.write(three_lines_before)
             f2.write(two_lines_before)
             f2.write(one_line_before)

@@ -1,4 +1,3 @@
-# define an author and article class
 from dataclasses import dataclass
 
 

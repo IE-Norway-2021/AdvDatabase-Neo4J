@@ -1,14 +1,10 @@
 import os
 import time
-import re
-import json
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph
 from py2neo.bulk import create_nodes, create_relationships
 from classes import Author, Article
 from clean import cleanString
 import ijson
-import logging
-from itertools import islice
 import datetime
 import tracemalloc
 
@@ -20,13 +16,9 @@ NEO4J_IP = os.environ['NEO4J_IP']
 # CLEANED_FILE = "dblpExampleCleanedTest.json"
 # MAX_NODES = 10000
 # NEO4J_IP = "localhost"
-# create a logger to the console
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 def preprocessJson(jsonFile):
-    # preprocess the json file to get the nodes and the relationships. Split the json file in two arrays one for the authors and one for the papers
     authors: list[Author] = []
     articles: list[Article] = []
     # read the file as a json file. Only take the first MAX_NODES nodes
@@ -50,7 +42,6 @@ def preprocessJson(jsonFile):
                         name = tmp[j]["name"]
                     author = Author(_id, name)
                     authorsArray.append(author._id)
-                    # find in authors if there is an author with the same _id, otherwise add it to the list TODO maybe optimise this
                     if (not any(author._id == a._id for a in authors)):
                         authors.append(author)
             # extract articles
@@ -76,7 +67,6 @@ def preprocessJson(jsonFile):
 
 
 def writeInDb(authors, articles, graph):
-    # First create the nodes, then create the relationships
     # create all the authors nodes and add them to the graph. 
     print("Creating authors nodes data")
     keys_authors = ['_id', 'name']
@@ -147,26 +137,22 @@ def main():
     print("Number of authored in the graph: ", graph.run("MATCH (a:Author)-[r:AUTHORED]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
     print("Number of cites in the graph: ", graph.run("MATCH (a:Article)-[r:CITES]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
     print("Time taken: ", str(datetime.timedelta(seconds=end-start)))
-    # log performance test result triplet of (nb of articles, memory usage in MB, time in seconds)
     print(f"Performance test result : (number of article = {MAX_NODES}, memory in MB = {peak/10**6}, time in seconds = {end-start})")
     tracemalloc.stop()
 
     
 
 if __name__ == '__main__':  
-    # path = 'db.json'
-    # print("Cleaning the json file...")
-    
-    # cleanString(path, 'dblpExampleCleaned2.json', MAX_NODES)
-   
-    # authors, articles = preprocessJson(path)
-    # print(len(authors))
-    # print(len(articles))
-    
     # sleep for 10 seconds to wait for neo4j to start
     print("Waiting for neo4j to start, sleeping for 15 sec...")
     time.sleep(15)
     main()
+    # path = 'db.json'
+    # print("Cleaning the json file...")
+    # cleanString(path, 'dblpExampleCleaned2.json', MAX_NODES)
+    # authors, articles = preprocessJson(path)
+    # print(len(authors))
+    # print(len(articles))
     # authors, articles = preprocessJson(CLEANED_FILE)
     # # print authors with no id
     # graph = Graph(name="neo4j", password="test", host="localhost")
