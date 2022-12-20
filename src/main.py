@@ -9,7 +9,8 @@ from clean import cleanString
 import ijson
 import logging
 from itertools import islice
-
+import datetime
+import tracemalloc
 
 # JSON_FILE = os.environ['JSON_FILE']
 # CLEANED_FILE = os.environ['CLEANED_FILE']
@@ -122,6 +123,7 @@ def writeInDb(authors, articles, graph):
     
 
 def main():
+    tracemalloc.start()
     start = time.time()
     # clean all
     logger.info("Cleaning the json file...")
@@ -137,12 +139,17 @@ def main():
     # write the nodes and the relationships in the graph
     logger.info("Writing in the graph...")
     writeInDb(authors, articles, graph)
+    end = time.time()
+    current, peak = tracemalloc.get_traced_memory()
     logger.info("Number of authors in the graph: ", graph.run("MATCH (a:Author) RETURN count(a) as count;").data()[0]["count"])
     logger.info("Number of articles in the graph: ", graph.run("MATCH (a:Article) RETURN count(a) as count;").data()[0]["count"])
     logger.info("Number of authored in the graph: ", graph.run("MATCH (a:Author)-[r:AUTHORED]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
     logger.info("Number of cites in the graph: ", graph.run("MATCH (a:Article)-[r:CITES]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
-    end = time.time()
-    logger.info("Time to load the graph: ", end - start, "s")
+    logger.info("Time taken: ", str(datetime.timedelta(seconds=end-start)))
+    # log performance test result triplet of (nb of articles, memory usage in MB, time in seconds)
+    logger.info(f"Performance test result : (number of article = {MAX_NODES}, memory in MB = {peak/10**6}, time in seconds = {end-start})")
+    tracemalloc.stop()
+
     
 
 if __name__ == '__main__':  
