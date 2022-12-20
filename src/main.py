@@ -122,14 +122,7 @@ def writeInDb(authors, articles, graph):
     
     print('')
     print("Creating relationship AUTHORED in DB")
-    stream = iter(data_authored)
-    batch_size = (int)(MAX_NODES/10)
-    while True:
-        batch = islice(stream, batch_size)
-        if batch:
-            create_relationships(graph, batch, "AUTHORED", start_node_key=start_node_key_authored, end_node_key=end_node_key_authored)
-        else:
-            break
+    create_relationships(graph, data_authored, "AUTHORED", start_node_key=start_node_key_authored, end_node_key=end_node_key_authored)
 
     # create all the relationships between the articles and the references 
     print("Creating relationship CITES...")
@@ -150,7 +143,7 @@ def writeInDb(authors, articles, graph):
     
 
 def main():
-    
+    start
     # clean all
     print("Cleaning the json file...")
     cleanString(JSON_FILE, CLEANED_FILE, MAX_NODES)
