@@ -1,6 +1,5 @@
 # Laboratory 2 – Diving deeper with Neo4j <!-- omit in toc -->
 
----
 
 **Jade Gröli & David González León**
 
@@ -80,6 +79,8 @@ En ce qui concerne les relations CITES, nous avons remarqué qu'aucun des identi
 
 # 5. Analyse des performances
 
-une mesure min d'un test de performance
+Un test de performance nous fournit le résultat suivant : 
 
-A performance test result is a triplet {“number_of_articles=XX, “memoryMB”=”3000”, “seconds”=”YY”}
+``` bash
+app_1  | Performance test result : (number of article = 10000, memory in MB = 42.547651, time in seconds = 414.07366919517517)
+```
