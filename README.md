@@ -1,42 +1,85 @@
-# Description of the graph : 
+# Laboratory 2 – Diving deeper with Neo4j <!-- omit in toc -->
 
-- Nodes : Articles and Authors : 
-  - Articles : 
-    - "_id" : id of the article
-    - "title" : title of the article
-    - "venue" : où a été publié l'article
-      - "_id" : id of the venue
-      - "type" : type of the venue. A changer l'encodage
-      - "raw" : raw name of the venue
-      - "raw_zh" : raw name of the venue v2
-    - "year" : année de publication. A changer l'encodage
-    - "keywords" : list of keywords related to article. Pas toujours renseigné
-    - "fos" : list of fields of study related to article
-    - "n_citation" : number of citations. A changer l'encodage
-    - "page_start" : page start
-    - "page_end" : page end
-    - "lang" : language
-    - "volume" : volume
-    - "issue" : issue
-    - "issn" : issn
-    - "isbn" : isbn
-    - "doi" : doi
-    - "pdf" : pdf
-    - "url" : list of urls
-    - "abstract" : abstract
-  - Authors : 
-    - "_id" : id of the author
-    - "name" : name of the author
-    - "org" : organization of the author. Pas toujours renseigné
-    - "orgid" : organization id of the author. Pas toujours renseigné
-- Relathionships : Cite and Authored : 
-  - Cite : from one article to the one cited
-  - Authored : from the author to the article
+---
 
-"CREATE (a0:Article {title: 'charlie's lab', _id: '53e99809b7602d970201fa36'}), (a1:Article {title: 'Genes.', _id: '53e99785b7602d9701f405f5'}), (a2:Article {title: '3GIO.', _id: '53e99784b7602d9701f3e3f5'}), (a3:Article {title: 'The relationship between canopy parameters and spectrum of winter wheat under different irrigations in Hebei Province.', _id: '53e99784b7602d9701f3e133'});"
+**Jade Gröli & David González León**
 
-MATCH (a0:Article), (a1:Article), (a2:Article), (a3:Article), (b0:Author), (b1:Author), (b2:Author), (b3:Author), (b4:Author), (b5:Author), (b6:Author), (b7:Author) 
+---
 
-WHERE a0._id = '53f4670cdabfaeb22f540094' OR a1._id = '54057888dabfae91d3fe730e' OR a1._id = '53f45728dabfaec09f209538' OR a1._id = '53f48a96dabfaeb1a7cd1cc5' OR a3._id = '53f45728dabfaec09f209538' OR a3._id = '5601754345cedb3395e59457' OR a3._id = '53f38438dabfae4b34a08928' OR a3._id = '5601754345cedb3395e5945a' OR a3._id = '53f43d25dabfaeecd6995149' 
+- [1. Introduction](#1-introduction)
+- [2. Installation et lancement des containers](#2-installation-et-lancement-des-containers)
+- [3. Description de l'architecture](#3-description-de-larchitecture)
+  - [3.1. Liste des paramètres choisis](#31-liste-des-paramètres-choisis)
+- [4. Description de l'application](#4-description-de-lapplication)
+  - [4.1. "Nettoyage" des données](#41-nettoyage-des-données)
+  - [4.2. Preprocessing des données](#42-preprocessing-des-données)
+  - [4.3. Insertion dans la DB](#43-insertion-dans-la-db)
+- [5. Analyse des performances](#5-analyse-des-performances)
 
-CREATE (a0)<-[:AUTHORED]-(b0), (a1)<-[:AUTHORED]-(b0), (a1)<-[:AUTHORED]-(b1), (a1)<-[:AUTHORED]-(b2), (a3)<-[:AUTHORED]-(b0), (a3)<-[:AUTHORED]-(b1), (a3)<-[:AUTHORED]-(b2), (a3)<-[:AUTHORED]-(b3), (a3)<-[:AUTHORED]-(b4);
+---
+
+# 1. Introduction
+
+Ce repo contient le code de l'application python qui permet d'insérer les données de la base de donnée DBLP dans une base de données Neo4j. Il contient également un fichier docker-compose.yml qui permet de lancer l'application et la base de données Neo4j dans des containers docker.
+
+# 2. Installation et lancement des containers
+
+Pour lancer l'application entière, il faut tout d'abord avoir à la racine de ce repo un fichier db.json qui correspond aux données à insérer. Ensuite, il faut lancer la commande `docker-compose up --build` qui va lancer les containers et les lier entre eux. L'application s'exécutera alors, et annoncera une fois que l'insertion de toutes les données sera terminée.
+
+Pour accéder à l'interface de neo4j, il faut aller sur l'adresse `localhost:7474` et se connecter avec les identifiants `neo4j` et `test`.
+
+La base de donnée utilisée pour tester cette application est la base de donnée DBLP version 13. L'application chargera automatiquement 10'000 articles de cette base de donnée. Pour modifier cette valeur, il faut modifier la constante `MAX_NODES` dans le fichier [docker-compose.yml](docker-compose.yml). L'application n'a été testée qu'avec cette valeur ou des valeurs inférieures.
+
+# 3. Description de l'architecture
+
+L'architecture de cet application est composée de deux containers :
+
+-   Un container qui contient l'application python qui va parser les données et les insérer dans la base de données.
+-   Un container qui contient la base de données Neo4j qui va recevoir les données insérées par l'application python.
+
+L'intégralité du code de l'application se trouve dans le dossier src.
+
+## 3.1. Liste des paramètres choisis
+
+Pour déterminer quels paramètres utiliser pour les différents noeuds de la base de donnée, nous avons parcourus le fichier dblpExample.json, qui contient un extrait de la base de donnée originale. Pour les deux noeuds à créer nous avons retenu les valeurs suivantes :
+
+-   Noeud Author :
+    -   \_id : l'identifiant de l'auteur, qui est unique
+    -   name : le nom de l'auteur
+-   Noeud Article
+    -   \_id : l'identifiant de l'article, qui est unique
+    -   title : le titre de l'article
+
+Nous avons décidé de ne garder que ces éléments la, car ils nous paraissaient être les points essentiels de ces deux noeuds. D'autres attributs pourraient cependant être facilement ajouté dans un deuxième temps.
+
+Nous avons également conservé les références de chaque article, afin de pouvoir créer la relation CITES entre les articles.
+
+# 4. Description de l'application
+
+L'application python est composée de trois parties principales décrites dans les sections suivantes.
+
+## 4.1. "Nettoyage" des données
+
+Le fichier json contenant l'ensemble des données est parcouru ligne par ligne. Un nombre maximum d'item à lire dans le fichier json est fixé (MAX_NODES dans le code). La fonction 'clean' parcourt le fichier ligne par ligne et enlève les caractères et les expressions qui ne sont pas reconnus dans le format json tel que les "\" ou les "NumberInt". La lecture s'arrête lorsque le nombre maximum d'item est atteint. Cette fonction fournit un nouveau fichier json syntaxiquement correct et avec le nombre d'item souhaité. C'est ce nouveau fichier json qui sera utilisé pour inséré les données dans la base de données.
+
+Nous avons préféré cette technique au lieu d'utiliser un driver permettant de lire du bson, qui est le format original de la base de donnée, pour plusieurs raisons. La première est que le fichier n'est pas non plus complètement correct avec le format bson, notamment à cause des "\". La deuxième est que le driver ne permet pas de lire le fichier item par item, ce qui aurait nécessité de stocker l'intégralité du fichier en mémoire, ce qui n'est pas possible avec la taille de la base de donnée.
+
+## 4.2. Preprocessing des données
+
+Le fichier json créé à l'aide de la fonction `clean` est parcouru pour extraire les différentes données ainsi que les relations entre ces données. Ces informations sont stockées dans des tableaux : un pour les auteurs et un pour les articles. Des [dataclass](https://docs.python.org/3/library/dataclasses.html) sont créées pour stocker les informations des auteurs et des articles. Les tableaux des articles et des auteurs stockent des instances de ces classes. Les relations sont : CITES (un article cite un autre article) et AUTHORED (les auteurs qui ont écrit l'articles. Ces références sont conservées dans la dataclass de l'article.
+
+Cette partie a posé un certain nombre de problème puisqu'en raison des limitations dû à la mémoire, il n'était pas possible d'ouvrir le fichier dans son intégralité. Pour cela, nous avons utilisé la librairie [ijson](https://pypi.org/project/ijson/) qui n'ouvre le fichier qu'item par item.
+
+## 4.3. Insertion dans la DB
+
+Pour insérer les données dans la base de donnée neo4j, nous avons utilisé le driver [py2neo](https://py2neo.org/2021.1/). Il offre notamment un certain nombre de fonctions qui permettent d'effectuer des insertions de donnée en bulk, ce qui permet d’accélérer les performances de notre application ([documentation](https://py2neo.org/2021.1/bulk/index.html)).
+
+Nous insérons donc les données en utilisant ces fonctions. Nous effectuons d'abord les insertions des noeuds Author et Article avec la fonction `create_node`, puis nous créons les relations entre ces noeuds. Pour les relations, nous avons utilisé la fonction `create_relationships` qui permet d'insérer plusieurs relations en une seule requête. Nous avons utilisé cette fonction pour insérer les relations CITES et AUTHORED.
+
+En ce qui concerne les relations CITES, nous avons remarqué qu'aucun des identifiants des articles référencés ne renvoyait vers un articles de la base de données. Nous avons donc choisi de ne pas insérer une relation CITES si l'articles référencé n'est pas dans la base de donnée. Comme les noeuds Article et Author sont tous créés avant les relations, nous pouvons vérifier si l'identifiant de l'article référencé est présent dans la base de donnée. S'il ne l'est pas, nous ne créons pas la relation CITES. Cela à pour conséquence que nous n'avons aucune relation CITES dans la base de données finale.
+
+# 5. Analyse des performances
+
+une mesure min d'un test de performance
+
+A performance test result is a triplet {“number_of_articles=XX, “memoryMB”=”3000”, “seconds”=”YY”}

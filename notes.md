@@ -1,0 +1,34 @@
+# Description of the graph :
+
+-   Nodes : Articles and Authors :
+    -   Articles :
+        -   "\_id" : id of the article
+        -   "title" : title of the article
+        -   "venue" : où a été publié l'article
+            -   "\_id" : id of the venue
+            -   "type" : type of the venue. A changer l'encodage
+            -   "raw" : raw name of the venue
+            -   "raw_zh" : raw name of the venue v2
+        -   "year" : année de publication. A changer l'encodage
+        -   "keywords" : list of keywords related to article. Pas toujours renseigné
+        -   "fos" : list of fields of study related to article
+        -   "n_citation" : number of citations. A changer l'encodage
+        -   "page_start" : page start
+        -   "page_end" : page end
+        -   "lang" : language
+        -   "volume" : volume
+        -   "issue" : issue
+        -   "issn" : issn
+        -   "isbn" : isbn
+        -   "doi" : doi
+        -   "pdf" : pdf
+        -   "url" : list of urls
+        -   "abstract" : abstract
+    -   Authors :
+        -   "\_id" : id of the author
+        -   "name" : name of the author
+        -   "org" : organization of the author. Pas toujours renseigné
+        -   "orgid" : organization id of the author. Pas toujours renseigné
+-   Relathionships : Cite and Authored :
+    -   Cite : from one article to the one cited
+    -   Authored : from the author to the article
