@@ -11,14 +11,14 @@ import logging
 from itertools import islice
 
 
-JSON_FILE = os.environ['JSON_FILE']
-CLEANED_FILE = os.environ['CLEANED_FILE']
-MAX_NODES = int(os.environ['MAX_NODES'])
-NEO4J_IP = os.environ['NEO4J_IP']
-# JSON_FILE = "db.json"
-# CLEANED_FILE = "dblpExampleCleanedTest.json"
-# MAX_NODES = 10000
-# NEO4J_IP = "localhost"
+# JSON_FILE = os.environ['JSON_FILE']
+# CLEANED_FILE = os.environ['CLEANED_FILE']
+# MAX_NODES = int(os.environ['MAX_NODES'])
+# NEO4J_IP = os.environ['NEO4J_IP']
+JSON_FILE = "db.json"
+CLEANED_FILE = "dblpExampleCleanedTest.json"
+MAX_NODES = 10000
+NEO4J_IP = "localhost"
 # create a logger to the console
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
