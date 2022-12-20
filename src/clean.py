@@ -21,7 +21,7 @@ def cleanString(jsonFile, destFile, maxNodes):
                     if (numberOfNodesRead == maxNodes):
                         # write the end of the json file
                         f2.write('}]')
-                        break
+                        return
 
                 # regex to find all NumberInt(...) and replace it with the number inside of the parenthesis
                 line = re.sub(r'NumberInt\((\d+)\)', r'\1', line)
@@ -42,5 +42,7 @@ def cleanString(jsonFile, destFile, maxNodes):
                 #     print(f'Loading {round(i/length*100, 2)}%', end='')
                 #i +=1
             #print('\r', end='')
-    print("Done cleaning the json file")
+            f2.write(three_lines_before)
+            f2.write(two_lines_before)
+            f2.write(one_line_before)
 
