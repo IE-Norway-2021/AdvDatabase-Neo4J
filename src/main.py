@@ -64,13 +64,9 @@ def preprocessJson(jsonFile):
             articles.append(article)
             i += 1
             # Show the progress
-            if (i % 1000 == 0):
-                print('\r', end='')
-                print(f'Loading {round(i/MAX_NODES*100, 2)}%', end='')
             if (i == MAX_NODES):
-                print('')
                 break
-        print('\nDone!')
+        print('Done!')
 
         
     return authors, articles
@@ -86,10 +82,6 @@ def writeInDb(authors, articles, graph):
     # create the data array for the authors
     for i in range(len(authors)):
         data_authors.append([authors[i]._id, authors[i].name])
-        if (i % 1000 == 0):
-            print('\r', end='')
-            print(f'Loading {round(i/len(authors)*100, 2)}%', end='')
-    print('')
     print("Creating authors nodes in DB")
     create_nodes(graph, data_authors,  labels={'Author'}, keys=keys_authors)
     
@@ -100,10 +92,6 @@ def writeInDb(authors, articles, graph):
     # create the data array for the articles
     for i in range(len(articles)):
         data_articles.append([articles[i]._id, articles[i].title])
-        if (i % 1000 == 0):
-            print('\r', end='')
-            print(f'Loading {round(i/len(articles)*100, 2)}%', end='')
-    print('')
     print("Creating articles nodes in DB")
     create_nodes(graph, data_articles,  labels={'Article'}, keys=keys_articles)
 
@@ -116,11 +104,6 @@ def writeInDb(authors, articles, graph):
     for i in range(len(articles)):
         for j in range(len(articles[i].authors)):
             data_authored.append((articles[i].authors[j], {}, articles[i]._id))
-        if (i % 1000 == 0):
-            print('\r', end='')
-            print(f'Loading {round(i/len(articles)*100, 2)}%', end='')
-    
-    print('')
     print("Creating relationship AUTHORED in DB")
     create_relationships(graph, data_authored, "AUTHORED", start_node_key=start_node_key_authored, end_node_key=end_node_key_authored)
 
@@ -132,10 +115,6 @@ def writeInDb(authors, articles, graph):
     for i in range(len(articles)):
         for j in range(len(articles[i].references)):
             data_cites.append((articles[i]._id, {}, articles[i].references[j]))
-        if (i % 1000 == 0):
-            print('\r', end='')
-            print(f'Loading {round(i/len(articles)*100, 2)}%', end='')
-    print('')
     print("Creating relationship CITES in DB")
     create_relationships(graph, data_cites, "CITES", start_node_key=start_node_key_cites, end_node_key=end_node_key_cites)
 
@@ -143,7 +122,7 @@ def writeInDb(authors, articles, graph):
     
 
 def main():
-    start
+    start = time.time()
     # clean all
     print("Cleaning the json file...")
     cleanString(JSON_FILE, CLEANED_FILE, MAX_NODES)
@@ -158,11 +137,11 @@ def main():
     print("Writing in the graph...")
     writeInDb(authors, articles, graph)
     print("Number of authors in the graph: ", graph.run("MATCH (a:Author) RETURN count(a) as count;").data()[0]["count"])
-    print("Number of authors in the json file: ", len(authors))
     print("Number of articles in the graph: ", graph.run("MATCH (a:Article) RETURN count(a) as count;").data()[0]["count"])
-    print("Number of articles in the json file: ", len(articles))
     print("Number of authored in the graph: ", graph.run("MATCH (a:Author)-[r:AUTHORED]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
     print("Number of cites in the graph: ", graph.run("MATCH (a:Article)-[r:CITES]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
+    end = time.time()
+    print("Time to load the graph: ", end - start, "s")
     
 
 if __name__ == '__main__':  
