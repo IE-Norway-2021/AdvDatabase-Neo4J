@@ -9,7 +9,8 @@ from clean import cleanString
 import ijson
 import logging
 from itertools import islice
-
+import datetime
+import tracemalloc
 
 # JSON_FILE = os.environ['JSON_FILE']
 # CLEANED_FILE = os.environ['CLEANED_FILE']
@@ -66,7 +67,7 @@ def preprocessJson(jsonFile):
             # Show the progress
             if (i == MAX_NODES):
                 break
-        print('Done!')
+        logger.info('Done!')
 
         
     return authors, articles
@@ -76,27 +77,27 @@ def preprocessJson(jsonFile):
 def writeInDb(authors, articles, graph):
     # First create the nodes, then create the relationships
     # create all the authors nodes and add them to the graph. 
-    print("Creating authors nodes data")
+    logger.info("Creating authors nodes data")
     keys_authors = ['_id', 'name']
     data_authors = []
     # create the data array for the authors
     for i in range(len(authors)):
         data_authors.append([authors[i]._id, authors[i].name])
-    print("Creating authors nodes in DB")
+    logger.info("Creating authors nodes in DB")
     create_nodes(graph, data_authors,  labels={'Author'}, keys=keys_authors)
     
     # create the articles nodes and add them to the graph
-    print("Creating articles nodes data")
+    logger.info("Creating articles nodes data")
     keys_articles = ['_id', 'title']
     data_articles = []
     # create the data array for the articles
     for i in range(len(articles)):
         data_articles.append([articles[i]._id, articles[i].title])
-    print("Creating articles nodes in DB")
+    logger.info("Creating articles nodes in DB")
     create_nodes(graph, data_articles,  labels={'Article'}, keys=keys_articles)
 
     # create the relationships between the articles and the authored : AUTHORED
-    print("Creating relationship AUTHORED...")
+    logger.info("Creating relationship AUTHORED...")
     start_node_key_authored = ("Author", "_id")
     end_node_key_authored = ("Article", "_id")
     data_authored = []
@@ -104,65 +105,71 @@ def writeInDb(authors, articles, graph):
     for i in range(len(articles)):
         for j in range(len(articles[i].authors)):
             data_authored.append((articles[i].authors[j], {}, articles[i]._id))
-    print("Creating relationship AUTHORED in DB")
+    logger.info("Creating relationship AUTHORED in DB")
     create_relationships(graph, data_authored, "AUTHORED", start_node_key=start_node_key_authored, end_node_key=end_node_key_authored)
 
     # create all the relationships between the articles and the references 
-    print("Creating relationship CITES...")
+    logger.info("Creating relationship CITES...")
     start_node_key_cites = ("Article", "_id")
     end_node_key_cites = ("Article", "_id")
     data_cites = []
     for i in range(len(articles)):
         for j in range(len(articles[i].references)):
             data_cites.append((articles[i]._id, {}, articles[i].references[j]))
-    print("Creating relationship CITES in DB")
+    logger.info("Creating relationship CITES in DB")
     create_relationships(graph, data_cites, "CITES", start_node_key=start_node_key_cites, end_node_key=end_node_key_cites)
 
         
     
 
 def main():
+    tracemalloc.start()
     start = time.time()
     # clean all
-    print("Cleaning the json file...")
+    logger.info("Cleaning the json file...")
     cleanString(JSON_FILE, CLEANED_FILE, MAX_NODES)
+    logger.info("Cleaning done!")
     # connect to the graph
-    print("Connecting to the graph...")
+    logger.info("Connecting to the graph...")
     graph = Graph(name="neo4j", password="test", host=NEO4J_IP)
     graph.run("MATCH (n) DETACH DELETE n")
     # preprocess the json file
-    print("Preprocessing the json file...")
+    logger.info("Preprocessing the json file...")
     authors, articles = preprocessJson(CLEANED_FILE)
     # write the nodes and the relationships in the graph
-    print("Writing in the graph...")
+    logger.info("Writing in the graph...")
     writeInDb(authors, articles, graph)
-    print("Number of authors in the graph: ", graph.run("MATCH (a:Author) RETURN count(a) as count;").data()[0]["count"])
-    print("Number of articles in the graph: ", graph.run("MATCH (a:Article) RETURN count(a) as count;").data()[0]["count"])
-    print("Number of authored in the graph: ", graph.run("MATCH (a:Author)-[r:AUTHORED]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
-    print("Number of cites in the graph: ", graph.run("MATCH (a:Article)-[r:CITES]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
     end = time.time()
-    print("Time to load the graph: ", end - start, "s")
+    current, peak = tracemalloc.get_traced_memory()
+    logger.info("Number of authors in the graph: ", graph.run("MATCH (a:Author) RETURN count(a) as count;").data()[0]["count"])
+    logger.info("Number of articles in the graph: ", graph.run("MATCH (a:Article) RETURN count(a) as count;").data()[0]["count"])
+    logger.info("Number of authored in the graph: ", graph.run("MATCH (a:Author)-[r:AUTHORED]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
+    logger.info("Number of cites in the graph: ", graph.run("MATCH (a:Article)-[r:CITES]->(b:Article) RETURN count(r) as count;").data()[0]["count"])
+    logger.info("Time taken: ", str(datetime.timedelta(seconds=end-start)))
+    # log performance test result triplet of (nb of articles, memory usage in MB, time in seconds)
+    logger.info(f"Performance test result : (number of article = {MAX_NODES}, memory in MB = {peak/10**6}, time in seconds = {end-start})")
+    tracemalloc.stop()
+
     
 
 if __name__ == '__main__':  
     # path = 'db.json'
-    # path = 'dblpExampleCleaned2.json'
-    # print("Cleaning the json file...")
+    # logger.info("Cleaning the json file...")
     
-    # cleanString(path, 'dblpExampleCleanedTest.json', MAX_NODES)
+    # cleanString(path, 'dblpExampleCleaned2.json', MAX_NODES)
    
     # authors, articles = preprocessJson(path)
-    # print(len(authors))
-    # print(len(articles))
+    # logger.info(len(authors))
+    # logger.info(len(articles))
     
     # sleep for 10 seconds to wait for neo4j to start
-    print("Waiting for neo4j to start, sleeping for 15 sec...")
+    logger.info("Waiting for neo4j to start, sleeping for 15 sec...")
     time.sleep(15)
     main()
     # authors, articles = preprocessJson(CLEANED_FILE)
-    # # print authors with no id
+    # # logger.info authors with no id
     # graph = Graph(name="neo4j", password="test", host="localhost")
     # # clean all
     # writeInDb(authors, articles, graph)
-    # print("Done")
+    # logger.info("Done")
     
