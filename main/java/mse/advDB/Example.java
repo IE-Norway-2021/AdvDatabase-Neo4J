@@ -1,3 +1,5 @@
+// exemple donné par le professeur et non utilisé dans le projet
+
 package mse.advDB;
 
 import org.neo4j.driver.AuthTokens;

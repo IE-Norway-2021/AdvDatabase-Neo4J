@@ -1,8 +1,12 @@
 import re
-import os
 
 
 def cleanString(jsonFile, destFile, maxNodes):
+    """Clean the string from the json file to make it readable by neo4j
+    jsonFile: the path to the json file
+    destFile: the path to the destination file
+    maxNodes: the maximum number of nodes to read from the json file
+    """
     # clean the string. Open the file as needed since it is too big to load into memory
     one_line_before, two_lines_before, three_lines_before = '', '', ''
     numberOfNodesRead = 0
@@ -19,7 +23,7 @@ def cleanString(jsonFile, destFile, maxNodes):
                         f2.write('}]')
                         return
 
-                # regex to find all NumberInt(...) and replace it with the number inside of the parenthesis
+                # find all NumberInt(...) and replace it with the number inside of the parenthesis
                 line = re.sub(r'NumberInt\((\d+)\)', r'\1', line)
                 # remove all \" in the string
                 line = line.replace('\\"', '')

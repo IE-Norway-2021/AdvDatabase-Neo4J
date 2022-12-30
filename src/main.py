@@ -12,6 +12,8 @@ JSON_FILE = os.environ['JSON_FILE']
 CLEANED_FILE = os.environ['CLEANED_FILE']
 MAX_NODES = int(os.environ['MAX_NODES'])
 NEO4J_IP = os.environ['NEO4J_IP']
+
+# Debug tests
 # JSON_FILE = "db.json"
 # CLEANED_FILE = "dblpExampleCleanedTest.json"
 # MAX_NODES = 10000
@@ -19,15 +21,17 @@ NEO4J_IP = os.environ['NEO4J_IP']
 
 
 def preprocessJson(jsonFile):
+    """Preprocess the json file to get all the authors and articles
+    jsonFile: str
+    return: list[Author], list[Article]
+    """
     authors: list[Author] = []
     articles: list[Article] = []
-    # read the file as a json file. Only take the first MAX_NODES nodes
     with open(jsonFile, 'rb') as f:
         i = 0
         for record in ijson.items(f, 'item'):
             authorsArray = []
             if "authors" in record:
-                # get the authors of the article
                 tmp = record["authors"]
                 # go through all the authors
                 for j in range(len(tmp)):
@@ -42,6 +46,7 @@ def preprocessJson(jsonFile):
                         name = tmp[j]["name"]
                     author = Author(_id, name)
                     authorsArray.append(author._id)
+                    # TODO could be optimized by using a set instead of a list
                     if (not any(author._id == a._id for a in authors)):
                         authors.append(author)
             # extract articles
@@ -56,17 +61,19 @@ def preprocessJson(jsonFile):
             article = Article(_id, title, authorsArray, references)
             articles.append(article)
             i += 1
-            # Show the progress
             if (i == MAX_NODES):
                 break
         print('Done!')
-
-        
     return authors, articles
 
 
 
 def writeInDb(authors, articles, graph):
+    """Write the data in the database
+    authors: list[Author]
+    articles: list[Article]
+    graph: Graph
+    """
     # create all the authors nodes and add them to the graph. 
     print("Creating authors nodes data")
     keys_authors = ['_id', 'name']
@@ -147,6 +154,8 @@ if __name__ == '__main__':
     print("Waiting for neo4j to start, sleeping for 15 sec...")
     time.sleep(15)
     main()
+
+    # Debug tests
     # path = 'db.json'
     # print("Cleaning the json file...")
     # cleanString(path, 'dblpExampleCleaned2.json', MAX_NODES)
