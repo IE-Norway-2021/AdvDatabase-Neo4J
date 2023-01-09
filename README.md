@@ -1,6 +1,5 @@
 # Laboratory 2 – Diving deeper with Neo4j <!-- omit in toc -->
 
-
 **Jade Gröli & David González León**
 
 ---
@@ -75,12 +74,13 @@ Pour insérer les données dans la base de donnée neo4j, nous avons utilisé le
 
 Nous insérons donc les données en utilisant ces fonctions. Nous effectuons d'abord les insertions des noeuds Author et Article avec la fonction `create_node`, puis nous créons les relations entre ces noeuds. Pour les relations, nous avons utilisé la fonction `create_relationships` qui permet d'insérer plusieurs relations en une seule requête. Nous avons utilisé cette fonction pour insérer les relations CITES et AUTHORED.
 
-En ce qui concerne les relations CITES, nous avons remarqué qu'aucun des identifiants des articles référencés ne renvoyait vers un articles de la base de données. Nous avons donc choisi de ne pas insérer une relation CITES si l'articles référencé n'est pas dans la base de donnée. Comme les noeuds Article et Author sont tous créés avant les relations, nous pouvons vérifier si l'identifiant de l'article référencé est présent dans la base de donnée. S'il ne l'est pas, nous ne créons pas la relation CITES. Cela à pour conséquence que nous n'avons aucune relation CITES dans la base de données finale.
+En ce qui concerne les relations CITES, nous avons remarqué qu'aucun des identifiants des articles référencés ne renvoyait vers un articles de la base de donnée si nous ne prenions pas tous les éléments du fichier donné. Nous avons donc choisi de ne pas insérer une relation CITES si l'articles référencé n'est pas dans la base de donnée. Comme les noeuds Article et Author sont tous créés avant les relations, nous pouvons vérifier si l'identifiant de l'article référencé est présent dans la base de donnée. S'il ne l'est pas, nous ne créons pas la relation CITES. Cela à pour conséquence que nous n'avons aucune relation CITES dans la base de données finale avec 10'000 noeuds. Pour 20'000 noeuds nous n'obtenons que 6 relations CITES.
 
 # 5. Analyse des performances
 
-Un test de performance nous fournit le résultat suivant : 
+Nous avons effectué deux tests de performances avec deux tailles de graphes, une fois 10'000 articles et une autre fois pour 20'000 articles. Nous avons obtenu les résultats suivants :
 
-``` bash
+```bash
 app_1  | Performance test result : (number of article = 10000, memory in MB = 42.547651, time in seconds = 414.07366919517517)
+app_1  | Performance test result : (number of article = 20000, memory in MB = 58.702344, time in seconds = 1735.0233600139618)
 ```

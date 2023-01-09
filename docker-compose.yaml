@@ -32,7 +32,7 @@ services:
     environment:
       - JSON_FILE=/file.json
       - CLEANED_FILE=/file_cleaned.json
-      - MAX_NODES=10000
+      - MAX_NODES=20000
       - NEO4J_IP=172.24.0.10 # must be the same as above
     deploy:
       resources:
